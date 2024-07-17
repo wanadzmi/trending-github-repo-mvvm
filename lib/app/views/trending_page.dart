@@ -20,8 +20,55 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
     with LoadingHandler {
   Timer? _throttleTimer;
   final ScrollController _scrollController = ScrollController();
+
   bool _dialogShown = false;
   bool _showScrollToTopButton = false;
+
+  bool onNotification(ScrollNotification scrollInfo) {
+    if (scrollInfo.metrics.maxScrollExtent - scrollInfo.metrics.pixels <= 200) {
+      if (isLoadingMore || (_throttleTimer?.isActive ?? false)) {
+        return false;
+      }
+
+      setIsLoadingMore(loading: true);
+      final viewModel = context.read<HomePageViewModel>();
+
+      viewModel.increasePageNumber();
+      viewModel.getTrendingRepos().then((value) {
+        setIsLoadingMore(loading: false);
+
+        _throttleTimer = Timer(const Duration(seconds: 1), () {});
+      }).catchError((error) {
+        setIsLoadingMore(loading: false);
+      });
+    }
+    return false;
+  }
+
+  void _scrollListener() {
+    if (_scrollController.position.pixels > 300) {
+      setState(() {
+        _showScrollToTopButton = true;
+      });
+    } else {
+      setState(() {
+        _showScrollToTopButton = false;
+      });
+    }
+  }
+
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  Future<void> onRefresh() async {
+    final viewModel = context.read<HomePageViewModel>()..resetPagination();
+    await Future.wait([viewModel.getTrendingRepos()]);
+  }
 
   Widget buildRepoList() {
     return Builder(
@@ -71,32 +118,6 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
     );
   }
 
-  bool onNotification(ScrollNotification scrollInfo) {
-    if (scrollInfo.metrics.maxScrollExtent - scrollInfo.metrics.pixels <= 200) {
-      if (isLoadingMore || (_throttleTimer?.isActive ?? false)) {
-        return false;
-      }
-
-      setIsLoadingMore(loading: true);
-      final viewModel = context.read<HomePageViewModel>();
-
-      viewModel.increasePageNumber();
-      viewModel.getTrendingRepos().then((value) {
-        setIsLoadingMore(loading: false);
-
-        _throttleTimer = Timer(const Duration(seconds: 1), () {});
-      }).catchError((error) {
-        setIsLoadingMore(loading: false);
-      });
-    }
-    return false;
-  }
-
-  Future<void> onRefresh() async {
-    final viewModel = context.read<HomePageViewModel>()..resetPagination();
-    await Future.wait([viewModel.getTrendingRepos()]);
-  }
-
   Widget buildScreen() {
     return NotificationListener<ScrollNotification>(
       onNotification: onNotification,
@@ -110,26 +131,6 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
           slivers: <Widget>[buildRepoList()],
         ),
       ),
-    );
-  }
-
-  void _scrollListener() {
-    if (_scrollController.position.pixels > 300) {
-      setState(() {
-        _showScrollToTopButton = true;
-      });
-    } else {
-      setState(() {
-        _showScrollToTopButton = false;
-      });
-    }
-  }
-
-  void _scrollToTop() {
-    _scrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
     );
   }
 
@@ -148,6 +149,7 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
   @override
   void dispose() {
     super.dispose();
+    _throttleTimer?.cancel();
     _scrollController.dispose();
   }
 
