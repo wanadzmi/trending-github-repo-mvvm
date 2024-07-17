@@ -22,12 +22,22 @@ class HomePageViewModel extends BaseViewModel {
     _pageNumber += 1;
   }
 
+  void decreasePageNumber() {
+    if (_pageNumber > 1) {
+      _pageNumber -= 1;
+    }
+  }
+
   Future<MyResponse<dynamic, dynamic>> getTrendingRepos() async {
     DateTime tenDaysAgo = now.subtract(const Duration(days: 10));
     String date = DateFormat('yyyy-MM-dd').format(tenDaysAgo);
 
     notify(MyResponse.loading());
     final response = await HomeRepository().getTrendingRepos(date, _pageNumber);
+
+    if (response.status == ResponseStatus.error) {
+      decreasePageNumber();
+    }
 
     if (response.data is GithubResponseModel) {
       GithubResponseModel githubResponseModel =
