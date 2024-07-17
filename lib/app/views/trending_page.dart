@@ -21,7 +21,6 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
   Timer? _throttleTimer;
   final ScrollController _scrollController = ScrollController();
 
-  bool _dialogShown = false;
   bool _showScrollToTopButton = false;
 
   bool onNotification(ScrollNotification scrollInfo) {
@@ -162,15 +161,9 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (response.status == ResponseStatus.complete) {
         viewModel.consumed();
-      } else if (response.status == ResponseStatus.error && !_dialogShown) {
-        setState(() {
-          _dialogShown = true;
-        });
+      } else if (response.status == ResponseStatus.error) {
         await showErrorAlertDialog<dynamic>(response: response);
         viewModel.consumed();
-        setState(() {
-          _dialogShown = false;
-        });
       }
     });
   }
