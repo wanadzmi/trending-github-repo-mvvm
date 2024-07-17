@@ -19,6 +19,8 @@ class TrendingPage extends BaseStatefulPage {
 class TrendingPageState extends BaseStatefulState<TrendingPage>
     with LoadingHandler {
   Timer? _throttleTimer;
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollToTopButton = false;
 
   Widget buildRepoList() {
     return Builder(
@@ -103,15 +105,37 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
         child: CustomScrollView(
           key: PageStorageKey<String>(BottomTabBarItem.trending.name),
           physics: const AlwaysScrollableScrollPhysics(),
+          controller: _scrollController,
           slivers: <Widget>[buildRepoList()],
         ),
       ),
     );
   }
 
+  void _scrollListener() {
+    if (_scrollController.position.pixels > 300) {
+      setState(() {
+        _showScrollToTopButton = true;
+      });
+    } else {
+      setState(() {
+        _showScrollToTopButton = false;
+      });
+    }
+  }
+
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_scrollListener);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await context
           .read<HomePageViewModel>()
@@ -123,6 +147,7 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
   @override
   void dispose() {
     super.dispose();
+    _scrollController.dispose();
   }
 
   @override
@@ -144,7 +169,7 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
   @override
   PreferredSizeWidget? appbar() {
     final theme = Theme.of(context);
-    final viewModel = context.read<HomePageViewModel>();
+    final viewModel = context.watch<HomePageViewModel>();
     return AppBar(
       elevation: 0,
       title: Text(
@@ -159,7 +184,14 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
   }
 
   @override
-  Widget? floatingActionButton() => null;
+  Widget? floatingActionButton() {
+    if (!_showScrollToTopButton) return null;
+
+    return FloatingActionButton(
+      onPressed: _scrollToTop,
+      child: const Icon(Icons.arrow_upward),
+    );
+  }
 
   @override
   bool topSafeAreaEnabled() => false;
