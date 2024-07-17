@@ -1,0 +1,40 @@
+name: etiqa_github_repo
+description: "A new Flutter project."
+
+publish_to: 'none' 
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.1 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  #C
+  cupertino_icons: ^1.0.6
+
+  #D
+  dio: ^5.5.0+1
+
+  #F
+  fluttertoast: ^8.2.6
+  flutter_easyloading: ^3.0.5
+
+  #I
+  intl: ^0.19.0
+  
+  #P
+  provider: ^6.1.2
+
+  #T
+  timeago: ^3.7.0
+  
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
