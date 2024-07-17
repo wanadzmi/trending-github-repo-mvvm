@@ -51,10 +51,6 @@ class CustomColors {
 
 enum HttpRequestType { get, post, put, delete }
 
-enum CustomTextFormFieldTheme { display, edit }
-
-enum ExpandedButtonTheme { white, blue, gold, approved, reject, cancel }
-
 typedef Json = Map<String, dynamic>;
 typedef DialogActions = List<Widget> Function(BuildContext context);
 
