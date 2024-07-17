@@ -72,18 +72,20 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
     if (scrollInfo.metrics.maxScrollExtent - scrollInfo.metrics.pixels <= 200) {
       if (isLoadingMore) return false;
 
-      if (_debounce?.isActive ?? false) _debounce!.cancel();
+      if (_debounce?.isActive ?? false) {
+        _debounce!.cancel();
+        _debounce = null;
+      }
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _debounce = Timer(const Duration(milliseconds: 1000), () {
-          final viewModel = context.read<HomePageViewModel>();
-          if (!isLoadingMore) {
-            setIsLoadingMore();
-            viewModel.increasePageNumber();
-            viewModel
-                .getTrendingRepos()
-                .then((value) => setIsLoadingMore(loading: false));
-          }
+      _debounce = Timer(const Duration(milliseconds: 500), () {
+        if (isLoadingMore) return;
+
+        setIsLoadingMore();
+        final viewModel = context.read<HomePageViewModel>();
+        viewModel.increasePageNumber();
+        viewModel.getTrendingRepos().then((value) {
+          setIsLoadingMore(loading: false);
+          _debounce = null;
         });
       });
     }
