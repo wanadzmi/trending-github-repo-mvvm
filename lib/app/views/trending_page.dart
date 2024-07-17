@@ -18,7 +18,7 @@ class TrendingPage extends BaseStatefulPage {
 
 class TrendingPageState extends BaseStatefulState<TrendingPage>
     with LoadingHandler {
-  // Timer? _debounce;
+  Timer? _throttleTimer;
 
   Widget buildRepoList() {
     return Builder(
@@ -70,31 +70,19 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
 
   bool onNotification(ScrollNotification scrollInfo) {
     if (scrollInfo.metrics.maxScrollExtent - scrollInfo.metrics.pixels <= 200) {
-      if (isLoadingMore) return false;
+      if (isLoadingMore || (_throttleTimer?.isActive ?? false)) {
+        return false;
+      }
 
-      // with debounce
-      // if (_debounce?.isActive ?? false) {
-      //   _debounce!.cancel();
-      //   _debounce = null;
-      // }
-
-      // _debounce = Timer(const Duration(milliseconds: 500), () {
-      //   if (isLoadingMore) return;
-
-      //   setIsLoadingMore();
-      //   final viewModel = context.read<HomePageViewModel>();
-      //   viewModel.increasePageNumber();
-      //   viewModel.getTrendingRepos().then((value) {
-      //     setIsLoadingMore(loading: false);
-      //     _debounce = null;
-      //   });
-      // });
-
-      // without debound, user can spam the api call
-      setIsLoadingMore();
+      setIsLoadingMore(loading: true);
       final viewModel = context.read<HomePageViewModel>();
+
       viewModel.increasePageNumber();
       viewModel.getTrendingRepos().then((value) {
+        setIsLoadingMore(loading: false);
+
+        _throttleTimer = Timer(const Duration(seconds: 1), () {});
+      }).catchError((error) {
         setIsLoadingMore(loading: false);
       });
     }
@@ -156,10 +144,11 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
   @override
   PreferredSizeWidget? appbar() {
     final theme = Theme.of(context);
+    final viewModel = context.read<HomePageViewModel>();
     return AppBar(
       elevation: 0,
       title: Text(
-        "Trending Repos",
+        "Trending Repos (${viewModel.itemList.length})",
         style: theme.textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.bold,
           color: CustomColors.white,
