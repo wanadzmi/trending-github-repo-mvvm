@@ -20,6 +20,7 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
     with LoadingHandler {
   Timer? _throttleTimer;
   final ScrollController _scrollController = ScrollController();
+  bool _dialogShown = false;
   bool _showScrollToTopButton = false;
 
   Widget buildRepoList() {
@@ -151,18 +152,29 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
   }
 
   @override
-  Widget body() {
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     final viewModel = context.read<HomePageViewModel>();
-    final response = context.read<HomePageViewModel>().response;
+    final response = viewModel.response;
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (response.status == ResponseStatus.complete) {
         viewModel.consumed();
-      } else if (response.status == ResponseStatus.error) {
+      } else if (response.status == ResponseStatus.error && !_dialogShown) {
+        setState(() {
+          _dialogShown = true;
+        });
         await showErrorAlertDialog<dynamic>(response: response);
         viewModel.consumed();
+        setState(() {
+          _dialogShown = false;
+        });
       }
     });
+  }
+
+  @override
+  Widget body() {
     return isFirstLoad ? buildLoadingIndicator() : buildScreen();
   }
 
