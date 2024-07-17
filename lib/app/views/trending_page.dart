@@ -18,7 +18,7 @@ class TrendingPage extends BaseStatefulPage {
 
 class TrendingPageState extends BaseStatefulState<TrendingPage>
     with LoadingHandler {
-  Timer? _debounce;
+  // Timer? _debounce;
 
   Widget buildRepoList() {
     return Builder(
@@ -72,21 +72,30 @@ class TrendingPageState extends BaseStatefulState<TrendingPage>
     if (scrollInfo.metrics.maxScrollExtent - scrollInfo.metrics.pixels <= 200) {
       if (isLoadingMore) return false;
 
-      if (_debounce?.isActive ?? false) {
-        _debounce!.cancel();
-        _debounce = null;
-      }
+      // with debounce
+      // if (_debounce?.isActive ?? false) {
+      //   _debounce!.cancel();
+      //   _debounce = null;
+      // }
 
-      _debounce = Timer(const Duration(milliseconds: 500), () {
-        if (isLoadingMore) return;
+      // _debounce = Timer(const Duration(milliseconds: 500), () {
+      //   if (isLoadingMore) return;
 
-        setIsLoadingMore();
-        final viewModel = context.read<HomePageViewModel>();
-        viewModel.increasePageNumber();
-        viewModel.getTrendingRepos().then((value) {
-          setIsLoadingMore(loading: false);
-          _debounce = null;
-        });
+      //   setIsLoadingMore();
+      //   final viewModel = context.read<HomePageViewModel>();
+      //   viewModel.increasePageNumber();
+      //   viewModel.getTrendingRepos().then((value) {
+      //     setIsLoadingMore(loading: false);
+      //     _debounce = null;
+      //   });
+      // });
+
+      // without debound, user can spam the api call
+      setIsLoadingMore();
+      final viewModel = context.read<HomePageViewModel>();
+      viewModel.increasePageNumber();
+      viewModel.getTrendingRepos().then((value) {
+        setIsLoadingMore(loading: false);
       });
     }
     return false;
