@@ -8,14 +8,11 @@ import 'package:intl/intl.dart';
 
 class HomePageViewModel extends BaseViewModel {
   int _pageNumber = 1;
-  bool _canLoadMore = false;
   DateTime now = DateTime.now();
   List<ItemsModel> itemList = [];
-  bool get canLoadMore => _canLoadMore;
 
   void resetPagination() {
     _pageNumber = 1;
-    _canLoadMore = false;
   }
 
   void increasePageNumber() {
